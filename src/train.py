@@ -13,18 +13,18 @@ from transformers import CLIPModel
 
 def train_clip_with_triplet_loss(config):
     '''
-    Обучение CLIP модели с использованием triplet loss с hard mining.
+    Train the CLIP model using triplet loss with hard mining.
 
     Args:
-        train_loader (DataLoader): DataLoader для обучающих данных.
-        val_loader (DataLoader): DataLoader для валидационных данных.
-        model (CLIPModel): CLIP модель.
-        processor (CLIPProcessor): CLIP процессор.
-        device (torch.device): Устройство для обучения (например, 'cuda' или 'cpu').
-        num_epochs (int): Количество эпох для обучения.
-        lr (float): Скорость обучения.
-        margin (float): Margin для triplet loss.
-        save_model_path (str): Путь для сохранения обученной модели.
+        train_loader (DataLoader): DataLoader for training data.
+        val_loader (DataLoader): DataLoader for validation data.
+        model (CLIPModel): CLIP model.
+        processor (CLIPProcessor): CLIP processor.
+        device (torch.device): Device for training (e.g., 'cuda' or 'cpu').
+        num_epochs (int): Number of epochs for training.
+        lr (float): Learning rate.
+        margin (float): Margin for triplet loss.
+        save_model_path (str): Path to save the trained model.
     '''
 
     resize_transform = transforms.Compose([
@@ -32,11 +32,13 @@ def train_clip_with_triplet_loss(config):
         transforms.ToTensor(),
     ])
 
-    train_loader, val_loader = get_rkn_dataloader(root_dir=config['data']['base_path'],
-                                                  transform=resize_transform,
-                                                  shuffle=config['dataloader']['shuffle'])
+    train_loader, val_loader = get_rkn_dataloader(
+        root_dir=config['data']['base_path'],
+        transform=resize_transform,
+        shuffle=config['dataloader']['shuffle']
+    )
 
-    model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+    model = CLIPModel.from_pretrained('openai/clip-vit-base-patch32')
 
     device = config['training']['device']
     model.to(device)
@@ -48,25 +50,21 @@ def train_clip_with_triplet_loss(config):
 
     optimizer = AdamW(model.parameters(), lr=lr)
     scheduler = CosineAnnealingLR(optimizer, T_max=len(train_loader) * num_epochs)
-    # triplet_loss = TripletMarginWithDistanceLoss(
-    #     distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
-    #     margin=margin
-    # )
 
-    triplet_loss = CombinedLoss(triplet_margin=margin)
+    loss_func = CombinedLoss(triplet_margin=margin)
 
-    wandb.init(project="clip-triplet-training", config={
-        "learning_rate": lr,
-        "epochs": num_epochs,
-        "batch_size": train_loader.batch_size,
-        "margin": margin,
+    wandb.init(project='clip-triplet-training', config={
+        'learning_rate': lr,
+        'epochs': num_epochs,
+        'batch_size': train_loader.batch_size,
+        'margin': margin,
     })
 
     for epoch in range(num_epochs):
         model.train()
         epoch_loss = 0.0
 
-        with tqdm(total=len(train_loader), desc=f"Epoch {epoch+1}/{num_epochs}", unit="batch") as pbar:
+        with tqdm(total=len(train_loader), desc=f'Epoch {epoch+1}/{num_epochs}', unit='batch') as pbar:
             for i, (anchor, positive, negative) in enumerate(train_loader):
                 anchor, positive, negative = anchor.to(device), positive.to(device), negative.to(device)
 
@@ -74,20 +72,20 @@ def train_clip_with_triplet_loss(config):
                 positive_embeddings = model.get_image_features(pixel_values=positive)
                 negative_embeddings = model.get_image_features(pixel_values=negative)
 
-                loss = triplet_loss(anchor_embeddings, positive_embeddings, negative_embeddings)
+                loss = loss_func(anchor_embeddings, positive_embeddings, negative_embeddings)
                 epoch_loss += loss.item()
 
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
 
-                wandb.log({"train_loss": loss.item()})
-                pbar.set_postfix({"loss": loss.item()})
+                wandb.log({'train_loss': loss.item()})
+                pbar.set_postfix({'loss': loss.item()})
                 pbar.update(1)
 
         scheduler.step()
 
-        print(f"Epoch {epoch+1}/{num_epochs}, Training Loss: {epoch_loss/len(train_loader)}")
+        print(f'Epoch {epoch + 1}/{num_epochs}, Training Loss: {epoch_loss/len(train_loader)}')
 
         model.eval()
         val_loss = 0.0
@@ -99,12 +97,12 @@ def train_clip_with_triplet_loss(config):
                 positive_embeddings = model.get_image_features(pixel_values=positive)
                 negative_embeddings = model.get_image_features(pixel_values=negative)
 
-                loss = triplet_loss(anchor_embeddings, positive_embeddings, negative_embeddings)
+                loss = loss_func(anchor_embeddings, positive_embeddings, negative_embeddings)
                 val_loss += loss.item()
 
             val_loss /= len(val_loader)
-            print(f"Validation Loss: {val_loss}")
-            wandb.log({"val_loss": val_loss})
+            print(f'Validation Loss: {val_loss}')
+            wandb.log({'val_loss': val_loss})
 
         torch.save(model.state_dict(), save_model_path)
 
