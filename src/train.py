@@ -32,7 +32,7 @@ def train_clip_with_triplet_loss(config):
 
     train_loader, val_loader = get_rkn_dataloader(root_dir=config['data']['base_path'],
                                                   transform=resize_transform,
-                                                  shuffle=True)
+                                                  shuffle=config['dataloader']['shuffle'])
 
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
 
@@ -41,7 +41,7 @@ def train_clip_with_triplet_loss(config):
 
     lr = config['training']['learning_rate']
     num_epochs = config['training']['num_epochs']
-    margin = config['training']['margin']
+    margin = config['loss']['margin']
     save_model_path = config['training']['save_model_path']
 
     optimizer = AdamW(model.parameters(), lr=lr)

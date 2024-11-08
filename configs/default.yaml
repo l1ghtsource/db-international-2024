@@ -3,7 +3,6 @@ training:
   batch_size: 32
   learning_rate: 1e-5
   device: 'cuda'
-  margin: 0.2
   save_model_path: './clip_model.pth'
 
 data:
@@ -12,16 +11,9 @@ data:
 dataloader:
   num_workers: 4
   shuffle: true
-  drop_last: true
-
-dataloader_val:
-  num_workers: 4
-  shuffle: false
-  drop_last: false
 
 loss:
-  margin: 0.3
-  hard_negative_ratio: 0.5
+  margin: 0.2
 
 wandb:
   project: 'RKN_DB'
