@@ -21,7 +21,7 @@ def create_zip(images):
     return zip_buffer
 
 
-st.set_page_config(page_title='Image Similarity Finder', page_icon=":mag:", layout='wide')
+st.set_page_config(page_title='ФотОриентир', page_icon=":mag:", layout='wide')
 st.title('Найти похожие изображения')
 
 uploaded_file = st.file_uploader('Загрузите изображение', type=['jpg', 'jpeg', 'png'])
