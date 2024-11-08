@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn import TripletMarginWithDistanceLoss
 
 
 class InfoNCELoss(nn.Module):
@@ -31,14 +32,16 @@ class TripletLoss(nn.Module):
         self.margin = margin
 
     def forward(self, anchor, positive, negative):
-        distance_positive = (anchor - positive).pow(2).sum(1)
-        distance_negative = (anchor - negative).pow(2).sum(1)
-        losses = F.relu(distance_positive - distance_negative + self.margin)
-        return losses.mean()
+        triplet_loss = TripletMarginWithDistanceLoss(
+            distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
+            margin=self.margin
+        )
+
+        return triplet_loss(anchor, positive, negative)
 
 
 class CombinedLoss(nn.Module):
-    def __init__(self, temperature=0.07, triplet_margin=0.3, weights=(1.0, 1.0)):
+    def __init__(self, temperature=0.07, triplet_margin=0.3, weights=(0.5, 0.5)):
         super().__init__()
         self.infonce = InfoNCELoss(temperature)
         self.triplet = TripletLoss(triplet_margin)
