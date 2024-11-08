@@ -42,7 +42,9 @@ class RKNDataset(Dataset):
 
     def __init__(
         self, root_dir: str,
-        transform: Optional[Callable] = transforms.ToTensor()
+        transform: Optional[Callable] = transforms.Compose([
+            transforms.Resize((356, 356)), transforms.ToTensor()
+        ])
     ):
         self.root_dir = root_dir
         self.transform = transform
