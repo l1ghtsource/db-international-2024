@@ -7,6 +7,7 @@ from torchvision import transforms
 from torch.nn import TripletMarginWithDistanceLoss
 import torch.nn.functional as F
 from data.dataloader import get_rkn_dataloader
+from models.modules import CombinedLoss
 from transformers import CLIPModel
 
 
@@ -51,6 +52,8 @@ def train_clip_with_triplet_loss(config):
         distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
         margin=margin
     )
+
+    # triplet_loss = CombinedLoss(triplet_margin=margin)
 
     wandb.init(project="clip-triplet-training", config={
         "learning_rate": lr,
