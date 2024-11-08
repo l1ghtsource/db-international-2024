@@ -2,6 +2,7 @@ import os
 import random
 from PIL import Image
 from typing import Tuple, Optional, Callable, Dict, List
+import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision import transforms
