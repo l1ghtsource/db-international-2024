@@ -1,0 +1,26 @@
+training:
+  num_epochs: 10
+  batch_size: 128
+  learning_rate: 5e-5
+  weight_decay: 1e-2
+  max_len: 4096
+
+data:
+  base_path: '/data'
+
+dataloader:
+  num_workers: 4
+  shuffle: true
+  drop_last: true
+
+dataloader_val:
+  num_workers: 4
+  shuffle: false
+  drop_last: false
+
+loss:
+  margin: 0.3
+  hard_negative_ratio: 0.5
+
+wandb:
+  project: 'RKN_DB'
