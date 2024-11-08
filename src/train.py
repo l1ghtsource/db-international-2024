@@ -48,12 +48,12 @@ def train_clip_with_triplet_loss(config):
 
     optimizer = AdamW(model.parameters(), lr=lr)
     scheduler = CosineAnnealingLR(optimizer, T_max=len(train_loader) * num_epochs)
-    triplet_loss = TripletMarginWithDistanceLoss(
-        distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
-        margin=margin
-    )
+    # triplet_loss = TripletMarginWithDistanceLoss(
+    #     distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
+    #     margin=margin
+    # )
 
-    # triplet_loss = CombinedLoss(triplet_margin=margin)
+    triplet_loss = CombinedLoss(triplet_margin=margin)
 
     wandb.init(project="clip-triplet-training", config={
         "learning_rate": lr,
