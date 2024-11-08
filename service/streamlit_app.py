@@ -21,7 +21,7 @@ def create_zip(images):
     return zip_buffer
 
 
-st.set_page_config(page_title='Image Similarity Finder', layout='wide')
+st.set_page_config(page_title='Image Similarity Finder', page_icon=":mag:", layout='wide')
 st.title('Найти похожие изображения')
 
 uploaded_file = st.file_uploader('Загрузите изображение', type=['jpg', 'jpeg', 'png'])
@@ -34,7 +34,7 @@ if uploaded_file is not None:
 
     with left_column:
         st.subheader('Загруженное изображение')
-        st.image(original_image, use_column_width=True, caption='Оригинал')
+        st.image(original_image, use_container_width=True, caption='Оригинал')
 
     with right_column:
         st.subheader('Похожие изображения')
@@ -43,7 +43,7 @@ if uploaded_file is not None:
             columns = st.columns(4)
             for i, img in enumerate(similar_images):
                 with columns[i % 4]:
-                    st.image(img, use_column_width=True, caption=f'Image {i + 1}')
+                    st.image(img, use_container_width=True, caption=f'Image {i + 1}')
 
     zip_file = create_zip(similar_images)
     st.download_button(
