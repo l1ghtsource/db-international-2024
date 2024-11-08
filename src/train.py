@@ -4,8 +4,9 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from tqdm import tqdm
 import wandb
 from torchvision import transforms
+from torch.nn import TripletMarginWithDistanceLoss
+import torch.nn.functional as F
 from data.dataloader import get_rkn_dataloader
-from models.modules import TripletLossWithHardMining
 from transformers import CLIPModel
 
 
@@ -46,7 +47,10 @@ def train_clip_with_triplet_loss(config):
 
     optimizer = AdamW(model.parameters(), lr=lr)
     scheduler = CosineAnnealingLR(optimizer, T_max=len(train_loader) * num_epochs)
-    triplet_loss = TripletLossWithHardMining(margin=margin).to(device)
+    triplet_loss = TripletMarginWithDistanceLoss(
+        distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
+        margin=margin
+    )
 
     wandb.init(project="clip-triplet-training", config={
         "learning_rate": lr,
