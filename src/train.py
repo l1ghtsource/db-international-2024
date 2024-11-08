@@ -40,7 +40,7 @@ def train_clip_with_triplet_loss(config):
     device = config['training']['device']
     model.to(device)
 
-    lr = config['training']['learning_rate']
+    lr = float(config['training']['learning_rate'])
     num_epochs = config['training']['num_epochs']
     margin = config['loss']['margin']
     save_model_path = config['training']['save_model_path']

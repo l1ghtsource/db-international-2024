@@ -1,0 +1,6 @@
+torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124
+torchvision==0.19.1 --index-url https://download.pytorch.org/whl/cu124
+torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu124
+tqdm==4.67.0
+wandb==0.18.6
+transformers==4.46.2
