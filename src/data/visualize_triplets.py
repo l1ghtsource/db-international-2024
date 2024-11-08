@@ -39,6 +39,6 @@ def visualize_random_triplets(dataloader: DataLoader, num_triplets: int = 5):
         axes[i, 2].set_title('Negative')
         axes[i, 2].axis('off')
 
-    # Show the plot
+    # show the plot
     plt.tight_layout()
     plt.show()
