@@ -2,7 +2,9 @@ import argparse
 import os
 from utils.config import load_config
 from train import train_process
-from inference import inference
+from inference import inference, inference_yolo
+from ultralytics import YOLO
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='RKN Model')
@@ -36,6 +38,7 @@ def parse_args():
     )
     return parser.parse_args()
 
+
 def main():
     args = parse_args()
     config = load_config(args.config, args.model_config)
@@ -52,7 +55,71 @@ def main():
     else:
         if args.checkpoint is None:
             raise ValueError('Checkpoint path is required for inference mode')
-        inference(config, args.checkpoint)
+        
+        # потом сделать с конфига подтягивание всего (путь к дате, веса, режим, индекс, юз классов)
+        print('YOLO w/ classes')
+        inference_yolo(
+            image_folder='images', 
+            model=YOLO('yolov8x-oiv7.pt'),
+            output_csv='submission_yolo_use_classes.csv', 
+            index='faiss/yolo_index', 
+            n=10, 
+            use_classes=True
+        )
+    
+        print('Triplet CLIP w/ classes')
+        inference(
+            image_folder='images', 
+            output_csv='submission_triplet_ver2_use_classes.csv', 
+            mode='clip_trained', 
+            weights='logs/clip_w_triplet_v2.pth', 
+            index='faiss/clip_trained_ver2_triplet_loss', 
+            n=10,
+            use_classes=True
+        )
+
+        print('Combined CLIP w/ classes')
+        inference(
+            image_folder='images', 
+            output_csv='submission_combined_ver1_use_classes.csv', 
+            mode='clip_trained', 
+            weights='logs/clip_model.pth', 
+            index='faiss/clip_trained_ver1_combined_loss', 
+            n=10,
+            use_classes=True
+        )
+        
+        print('YOLO w/o classes')
+        inference_yolo(
+            image_folder='images', 
+            model=YOLO('yolov8x-oiv7.pt'),
+            output_csv='submission_yolo_no_classes.csv', 
+            index='faiss/yolo_index', 
+            n=10, 
+            use_classes=False
+        )
+
+        print('Triplet CLIP w/o classes')
+        inference(
+            image_folder='images', 
+            output_csv='submission_triplet_ver2_no_classes.csv', 
+            mode='clip_trained', 
+            weights='logs/clip_w_triplet_v2.pth', 
+            index='faiss/clip_trained_ver2_triplet_loss', 
+            n=10,
+            use_classes=False
+        )
+
+        print('Combined CLIP w/o classes')
+        inference(
+            image_folder='images', 
+            output_csv='submission_combined_ver1_no_classes.csv', 
+            mode='clip_trained', 
+            weights='logs/clip_model.pth', 
+            index='faiss/clip_trained_ver1_combined_loss', 
+            n=10,
+            use_classes=False
+        )
 
 
 if __name__ == '__main__':

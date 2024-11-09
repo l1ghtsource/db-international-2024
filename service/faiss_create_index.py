@@ -9,6 +9,7 @@ import faiss
 from faiss import write_index
 import matplotlib.pyplot as plt
 import pickle
+from ultralytics import YOLO
 
 
 embeddings = []  # list to store image feature embeddings
@@ -68,31 +69,9 @@ def create_faiss_index_clip(embeddings, dimension):
     print(f'FAISS index creation completed in {end_time - start_time:.2f} seconds')  # print time taken
     
     return index  # return the FAISS index
-
-
-def visualize_similar_images_clip(query_image_path, similar_images):
-    query_image = Image.open(query_image_path)  # open the query image
-    similar_images = [Image.open(img_path) for img_path in similar_images]  # open the similar images
-    fig = plt.figure(figsize=(9, 9))  # create a figure for visualization
-
-    # display the query image
-    plt.subplot(3, 3, 1)
-    plt.imshow(query_image)
-    plt.title('Query Image', fontsize=12, pad=10)
-    plt.axis('off')
-
-    # display the similar images
-    for i, img in enumerate(similar_images[1:9]): 
-        plt.subplot(3, 3, i + 2)
-        plt.imshow(img)
-        plt.title(f'Similar {i + 1}', fontsize=12, pad=10)
-        plt.axis('off')
-
-    plt.tight_layout()  # adjust layout
-    plt.show()  # display the visualization
     
 
-def save_index(trained=True, weights='logs/clip_model.pth'):
+def save_index_clip(trained=True, weights='logs/clip_w_triplet_v2.pth', index='./faiss/clip_trained_ver2_triplet_loss'):
     pt_clip_v2 = CLIPModel.from_pretrained('openai/clip-vit-base-patch32')  # load the CLIP model
     if trained:
         checkpoint = torch.load(weights)  # load the trained weights
@@ -105,13 +84,80 @@ def save_index(trained=True, weights='logs/clip_model.pth'):
     
     # save the index and image paths
     if trained:
-        write_index(index_clip_v2, './clip_trained_ver1_combined_loss.index')
-        with open('./clip_trained_ver1_combined_loss.pkl', 'wb') as f:
+        write_index(index_clip_v2, f'{index}.index')
+        with open(f'{index}.pkl', 'wb') as f:
             pickle.dump(clip_images_v2, f)
         
     else:
-        write_index(index_clip_v2, './clip_default.index')
-        with open('./clip_default.pkl', 'wb') as f:
+        write_index(index_clip_v2, './faiss/clip_default.index')
+        with open('./faiss/clip_default.pkl', 'wb') as f:
             pickle.dump(clip_images_v2, f)
+            
+            
+def load_and_vectorize_images_yolo(model, dataset_path):
+    start_time = time.time()
 
-save_index()  # call the function to save the index
+    for class_ in tqdm(os.listdir(dataset_path)):  # iterate through classes in the dataset
+        class_path = os.path.join(dataset_path, class_)
+        
+        # skip non-directory files (e.g., .DS_Store)
+        if not os.path.isdir(class_path):
+            continue
+        
+        for file in os.listdir(class_path):  # iterate through files in each class
+            image_path = os.path.join(class_path, file)
+            try:
+                embedding = model.embed(image_path)[0]  # get embedding from YOLO model
+                
+                # move the tensor to CPU and convert to numpy
+                embedding = embedding.cpu().numpy()  # ensure tensor is moved to CPU before converting to numpy
+                embedding = embedding / np.linalg.norm(embedding)  # normalize the feature vector
+                
+                embeddings.append(embedding)  # add the embedding to the list
+                image_paths.append(image_path)  # add the image path to the list
+            except Exception as e:
+                print(f'Error processing {image_path}: {e}')  # handle any errors
+
+    end_time = time.time()
+    print(f'Image loading and vectorization completed in {end_time - start_time:.2f} seconds')  # print time taken
+    
+    return embeddings, image_paths  # return the embeddings and image paths
+
+
+def create_faiss_index_yolo(embeddings, dimension):
+    start_time = time.time()
+    
+    # convert the embeddings list to a numpy array (ensure the embeddings are in float32 format)
+    embeddings_array = np.array([embedding for embedding in embeddings]).astype('float32')
+    
+    # create a FAISS index using L2 distance
+    index = faiss.IndexFlatL2(dimension)  
+    index.add(embeddings_array)  # Add the embeddings to the index
+    
+    end_time = time.time()
+    print(f'FAISS index creation completed in {end_time - start_time:.2f} seconds')  # print time taken
+    
+    return index  # return the FAISS index
+    
+    
+def save_index_yolo(index='./faiss/yolo_index'):
+    model = YOLO('yolov8x-oiv7.pt')
+    dataset_path = '../data/train_data_rkn/dataset'
+
+    # vectorize images using YOLO
+    embs_yolo, image_paths_yolo = load_and_vectorize_images_yolo(model, dataset_path)
+    # determine the dimensionality of the embeddings
+    dimension = embs_yolo[0].shape[0]
+    # create FAISS index
+    faiss_index_yolo = create_faiss_index_yolo(embs_yolo, dimension)
+
+    # save the FAISS index and image paths
+    write_index(faiss_index_yolo, f'{index}.index')  # save the FAISS index
+    with open(f'{index}.pkl', 'wb') as f:
+        pickle.dump(image_paths_yolo, f)  # save the image paths
+
+
+# it was already saved
+# save_index_clip(trained=True, weights='logs/clip_w_triplet_v2.pth', index='./faiss/clip_trained_ver2_triplet_loss')  
+# save_index_clip(trained=True, weights='logs/clip_model.pth', index='./faiss/clip_trained_ver1_combined_loss')  
+# save_index_yolo(index='./faiss/yolo_index')

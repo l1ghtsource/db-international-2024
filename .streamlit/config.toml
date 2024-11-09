@@ -6,4 +6,9 @@ textColor = "#fafafa"
 font = "sans serif"
 
 [server]
+headless = true
 enableStaticServing = true
+enableCORS = false
+enableWebsocketCompression = false
+enableXsrfProtection = false
+port = 8501
