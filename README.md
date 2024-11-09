@@ -20,9 +20,9 @@ Team Members:
 ### Модели:
 1) CLIP (`openai/clip-vit-base-patch32`), дообученный на кастомном лоссе (основное решение):
 
-\[
+$$
 \text{CombinedLoss} = 0.5 \cdot \text{TripletMarginLossWithDistance} + 0.5 \cdot \text{InfoNCE}
-\]
+$$
 
 Учим пространство эмбеддингов так, чтобы эмбеддинги похожих по смыслу были близки, а далёких - далеки.
 Время генерации эмбеддинга на GPU: 50ms, на CPU: 180ms.
