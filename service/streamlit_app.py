@@ -1,16 +1,19 @@
 import streamlit as st
+import io
 import zipfile
+import torch
+import numpy as np
+import pickle
+import cv2
+
 from faiss import read_index
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
-import torch
-import numpy as np
 from faiss import read_index
-import pickle
-import cv2
 from ultralytics import YOLO
-import io
+
 from get_mapping import get_mapping
+from background_ignoring import pipeline
 
 # get the class mapping dictionary
 class_mapping_dict = get_mapping()
@@ -109,14 +112,46 @@ def create_zip(images):
 st.set_page_config(page_title='ФотОриентир', page_icon=":mag:", layout='wide')
 st.title('Поиск смысловых копий изображений')
 
+is_screenshot = st.checkbox("Изображение является скриншотом с сайта или коллажом")
 uploaded_file = st.file_uploader('Загрузите изображение', type=['jpg', 'jpeg', 'png'])
 
-if uploaded_file is not None:
+if uploaded_file is not None and is_screenshot:
+    draw_bboxes = st.checkbox("Показывать bounding boxes", key="bbox_checkbox")
+    
+    original_image = np.asarray(Image.open(uploaded_file), dtype=np.uint8)
+    contour_image, warped_images = pipeline(original_image)
+    
+    st.subheader('Загруженное изображение. Контурами выделены обнаруженные изображения')
+    st.image(Image.fromarray(np.uint8(contour_image)), use_container_width=True, caption='Оригинал')
+
+    for i, warped_img in enumerate(warped_images):
+        left_column, right_column = st.columns([1, 2], gap='large')
+        
+        with left_column:
+            st.subheader(f'Warped Image {i+1}')
+            st.image(warped_img, use_container_width=True, caption=f'Warped Image {i+1}')
+        
+        with right_column:
+            st.subheader('Найденные изображения')
+            similar_images, class_names = get_similar_images(Image.fromarray(np.uint8(warped_img)), n=20)
+            
+            with st.container():
+                columns = st.columns(4)
+                
+                for j, img in enumerate(similar_images):
+                    with columns[j % 4]:
+                        if draw_bboxes:
+                            img_with_bboxes = draw_bboxes_on_image(img, class_names[j], selected_class_num=class_mapping_dict[class_names[j]])
+                            st.image(img_with_bboxes, use_container_width=True, caption=f'Class: {class_names[j]}')
+                        else:
+                            st.image(img, use_container_width=True, caption=f'Class: {class_names[j]}')
+
+        st.markdown("---")
+elif uploaded_file is not None:
     original_image = Image.open(uploaded_file)
     similar_images, class_names = get_similar_images(original_image, n=20)
 
     draw_bboxes = st.checkbox("Показывать bounding boxes")
-
     left_column, right_column = st.columns([1, 2], gap='large')
 
     with left_column:
@@ -125,7 +160,7 @@ if uploaded_file is not None:
 
     with right_column:
         st.subheader('Смысловые копии')
-
+        
         with st.container():
             columns = st.columns(4)
             for i, img in enumerate(similar_images):
