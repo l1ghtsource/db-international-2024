@@ -21,7 +21,7 @@
 ```
 pip install -r requirements.txt
 ```
-4) Допишу после мерджа 
+4) Запустите в терминале, передав нужные аргументы
 
 ```
 python /src/main.py --mode <choose train or inference> 
