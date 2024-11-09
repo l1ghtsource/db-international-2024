@@ -32,7 +32,7 @@ def main():
     if args.wandb_key:
         os.environ['WANDB_API_KEY'] = args.wandb_key
 
-    if args.data_path:
+    if args.save_model_path:
         config['data']['save_model_path'] = args.save_model_path
 
     if args.mode == 'train':
