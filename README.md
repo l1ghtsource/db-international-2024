@@ -56,28 +56,66 @@ $$
 
 ## Запуск:
 
-
 1) Клонируем репозиторий 
-```
+```bash
 git clone https://github.com/l1ghtsource/db_international_2024.git
 cd db_international_2024
 ```
 2) Создаём или используем готовое виртуальное окружение 
-```
+```bash
 source environments/hack/bin/activate
 ```
 3) Устанавливаем необходиимые зависимости
-```
+```bash
 pip install -r requirements.txt
 ```
 4) Запускаем обучение/инференс моделей в терминале, передав нужные аргументы
-```
+```bash
 python /src/main.py --mode <choose train or inference> 
                    --data-path <path_to_your_dataset> 
                    --save-model-path ./logs/<name_of_your_experiment>.pth 
                    --wand-key <your_wandb_api_key>
 ``` 
 5) Для запуска Streamlit сервиса
-```
+```bash
 streamlit run service/streamlit_app.py
 ```
+
+## Структура проекта
+
+.
+├── .streamlit/                    # Конфигурационные файлы Streamlit
+│   ├── config.toml                # Настройки сервера и стилей
+│
+├── configs/                       # Конфигурационные файлы для моделей
+│   ├── clip.yaml                  # Конфиг для CLIP 
+│   ├── cross_attn_model.yaml      # Конфиг для Cross-attention модели
+│   └── default.yaml               # Общий конфиг по умолчанию
+│
+│
+├── service/                       # Различные скрипты сервиса
+│   ├── background_ignoring.py     # Скрипт для работы со скриншотами и коллажами (выделение из них фото)
+│   ├── faiss_create_index.py      # Скрипт для создания и сохранения индекса FAISS
+│   ├── get_mapping.py             # Файл с маппингом названий и номеров классов
+│   └── streamlit_app.py           # Основной Streamlit сервис
+│
+├── src/                           # Исходный DL код
+│   ├── data/                      # Скрипты для работы с данными
+│   │   ├── dataloader.py          # Dataloader для триплет-датасета
+│   │   ├── dataset.py             # Класс триплет-датасета
+│   │   └── visualize_triplets.py  # Скрипт для визуализации триплетов из датасета
+│   │
+│   ├── models/                    # Скрипты для моделей
+│   │   ├── cross_attn_model.py    # Архитектура Cross-attention модели
+│   │   └── modules.py             # Реализация Cross-attention, а также функций потерь
+│   │
+│   └── utils/                     # Вспомогательные скрипты
+│       ├── config.py              # Скрипт для загрузки конфигов
+│       ├── metrics.py             # Скрипт рассчета метрик ранжирования
+│     
+│── inference.py                   # Скрипт инференса моделей и генерации сабмита
+│── train.py                       # Скрипт обучения моделей
+│── main.py                        # Скрипт для запуска обучения/инференса с argparser
+│
+├── README.md                      # Документация к проекту           
+└── requirements.txt               # Зависимости Python библиотек
