@@ -26,6 +26,8 @@ $$
 \text{CombinedLoss} = 0.5 \cdot \text{TripletMarginLossWithDistance} + 0.5 \cdot \text{InfoNCE}
 $$
 
+Подробнее про InfoNCE: [Papers with Code](https://paperswithcode.com/method/infonce)
+
 Учим пространство эмбеддингов так, чтобы эмбеддинги похожих по смыслу были близки, а далёких - далеки.
 Время генерации эмбеддинга на GPU: `50ms`, на CPU: `180ms`.
 
