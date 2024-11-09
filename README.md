@@ -17,6 +17,8 @@ Team Members:
 
 ## Предложенное решение
 
+*тут блок-схема всего решения с первых слайдов*
+
 ### Модели:
 1) CLIP (`openai/clip-vit-base-patch32`), дообученный на кастомном лоссе (основное решение):
 
@@ -45,20 +47,20 @@ $$
 
 ![faiss](img/faiss.webp)
 
-Как запустить трейн скрипты
+### Фичи:
 
-1) Если репо ещё не склонирован, делаем 
+1) Выделение фото из скринов сайтов (не учитываем фон), работа с коллажами (находим все фото коллажа и работаем с ними отдельно)
+2) С помощью `yolov8x-oiv7` проводим детекцию объектов на изображениях, чтобы выделить их контекст для пользователя (выделение ключевых объектов)
+
+## Запуск:
+
+
+1) Клонируем репозиторий 
 ```
 git clone https://github.com/l1ghtsource/db_international_2024.git
 cd db_international_2024
 ```
 2) Создаём или используем готовое виртуальное окружение 
-```
-conda create --name hack
-conda activate hack
-(АААААААААААА КОНДА ПОТОМ ПОПРАВИТЕ)
-```
-Или
 ```
 source environments/hack/bin/activate
 ```
@@ -66,11 +68,14 @@ source environments/hack/bin/activate
 ```
 pip install -r requirements.txt
 ```
-4) Запустите в терминале, передав нужные аргументы
-
+4) Запускаем обучение/инференс моделей в терминале, передав нужные аргументы
 ```
 python /src/main.py --mode <choose train or inference> 
                    --data-path <path_to_your_dataset> 
                    --save-model-path ./logs/<name_of_your_experiment>.pth 
                    --wand-key <your_wandb_api_key>
 ``` 
+5) Для запуска Streamlit сервиса
+```
+streamlit run service/streamlit_app.py
+```
