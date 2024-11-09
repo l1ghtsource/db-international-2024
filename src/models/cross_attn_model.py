@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import CLIPModel, BlipVisionModel
-from modules import CrossAttention
+from models.modules import CrossAttention
 
 
 class CombinedModel(nn.Module):

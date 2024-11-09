@@ -6,7 +6,7 @@ training:
   device: 'cuda'
   save_model_path: './model.pth'
   model: 'clip'
-  loss: 'combined'
+  loss: 'triplet'
 
 data:
   base_path: '/data'
