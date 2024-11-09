@@ -21,27 +21,18 @@ def train_process(config):
         config (dict): Configuration dictionary with training settings.
     '''
     resize_transform = transforms.Compose([
-<<<<<<< HEAD
-        transforms.Resize((224, 224)),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2),
-        transforms.ToTensor(),
+        transforms.Resize((224, 224)),              
+        transforms.RandomHorizontalFlip(p=0.5),      
+        transforms.ColorJitter(brightness=0.2, contrast=0.2),        
+        transforms.ToTensor(),                      
     ])
-=======
-    transforms.Resize((224, 224)),              
-    transforms.RandomHorizontalFlip(p=0.5),      
-    transforms.ColorJitter(brightness=0.2,       
-                           contrast=0.2),        
-    transforms.ToTensor(),                      
-])
->>>>>>> 3f0bfc8f0f27a56fbe806a6e846218fe636c0170
 
     train_loader, val_loader = get_rkn_dataloader(
         root_dir=config['data']['base_path'],
         transform=resize_transform,
         shuffle=config['dataloader']['shuffle']
     )
-
+    
     if config['training']['model'] == 'clip':
         model = CLIPModel.from_pretrained('openai/clip-vit-base-patch32')
     elif config['training']['model'] == 'crossattn':
@@ -59,17 +50,13 @@ def train_process(config):
     margin = float(config['loss']['margin'])
     temperature = float(config['loss']['temperature'])
     save_model_path = config['training']['save_model_path']
-<<<<<<< HEAD
     early_stopping_patience = config['training']['early_stopping_patience']
-
-=======
->>>>>>> 3f0bfc8f0f27a56fbe806a6e846218fe636c0170
+    
     os.makedirs(os.path.dirname(save_model_path), exist_ok=True)
 
     optimizer = AdamW(model.parameters(), lr=lr)
     scheduler = CosineAnnealingLR(optimizer, T_max=len(train_loader) * num_epochs)
-<<<<<<< HEAD
-
+    
     if config['training']['loss'] == 'triplet':
         loss_func = TripletMarginWithDistanceLoss(
             distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
@@ -77,13 +64,6 @@ def train_process(config):
         )
     elif config['training']['loss'] == 'combined':
         loss_func = CombinedLoss(temperature=temperature, triplet_margin=margin)
-=======
-    loss_func = TripletMarginWithDistanceLoss(
-        distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
-        margin=margin
-    )
-    # loss_func = CombinedLoss(triplet_margin=margin)
->>>>>>> 3f0bfc8f0f27a56fbe806a6e846218fe636c0170
 
     wandb.init(project=config['wandb']['project'], config={
         'learning_rate': lr,
