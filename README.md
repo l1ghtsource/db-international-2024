@@ -24,6 +24,8 @@ pip install -r requirements.txt
 4) Допишу после мерджа 
 
 ```
-python /src/main.py --mode train --data-path <path_to_your_dataset> 
-            --save-model-path ./logs/<name_of_your_experiment>.pth --wand-key <your_wandb_api_key>
+python /src/main.py --mode <choose train or inference> 
+                    --data-path <path_to_your_dataset> 
+                    --save-model-path ./logs/<name_of_your_experiment>.pth 
+                    --wand-key <your_wandb_api_key>
 ``` 
