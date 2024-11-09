@@ -1,2 +1,5 @@
 model:
-  name: 'clip_blip_crossattn_fusion'
+  name: 'crossattn'
+  clip_model_name: 'openai/clip-vit-base-patch32'
+  blip_model_name: 'Salesforce/blip-image-captioning-base'
+  num_heads: 8
