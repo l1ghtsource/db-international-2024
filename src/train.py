@@ -9,32 +9,32 @@ from torch.nn import TripletMarginWithDistanceLoss
 import torch.nn.functional as F
 from data.dataloader import get_rkn_dataloader
 from models.modules import CombinedLoss
+from models.cross_attn_model import CombinedModel
 from transformers import CLIPModel
 
 
-def train_clip_with_triplet_loss(config):
+def train_process(config):
     '''
-    Train the CLIP model using triplet loss with hard mining.
+    Function for training model w/ custom loss and parameters.
 
     Args:
-        train_loader (DataLoader): DataLoader for training data.
-        val_loader (DataLoader): DataLoader for validation data.
-        model (CLIPModel): CLIP model.
-        processor (CLIPProcessor): CLIP processor.
-        device (torch.device): Device for training (e.g., 'cuda' or 'cpu').
-        num_epochs (int): Number of epochs for training.
-        lr (float): Learning rate.
-        margin (float): Margin for triplet loss.
-        save_model_path (str): Path to save the trained model.
+        config (dict): Configuration dictionary with training settings.
     '''
-
     resize_transform = transforms.Compose([
+<<<<<<< HEAD
+        transforms.Resize((224, 224)),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2),
+        transforms.ToTensor(),
+    ])
+=======
     transforms.Resize((224, 224)),              
     transforms.RandomHorizontalFlip(p=0.5),      
     transforms.ColorJitter(brightness=0.2,       
                            contrast=0.2),        
     transforms.ToTensor(),                      
 ])
+>>>>>>> 3f0bfc8f0f27a56fbe806a6e846218fe636c0170
 
     train_loader, val_loader = get_rkn_dataloader(
         root_dir=config['data']['base_path'],
@@ -42,31 +42,58 @@ def train_clip_with_triplet_loss(config):
         shuffle=config['dataloader']['shuffle']
     )
 
-    model = CLIPModel.from_pretrained('openai/clip-vit-base-patch32')
+    if config['training']['model'] == 'clip':
+        model = CLIPModel.from_pretrained('openai/clip-vit-base-patch32')
+    elif config['training']['model'] == 'crossattn':
+        model = CombinedModel(
+            clip_model_name=config['model']['clip_model_name'],
+            blip_model_name=config['model']['blip_model_name'],
+            num_heads=config['model']['num_heads']
+        )
 
     device = config['training']['device']
     model.to(device)
 
     lr = float(config['training']['learning_rate'])
     num_epochs = config['training']['num_epochs']
-    margin = config['loss']['margin']
+    margin = float(config['loss']['margin'])
+    temperature = float(config['loss']['temperature'])
     save_model_path = config['training']['save_model_path']
+<<<<<<< HEAD
+    early_stopping_patience = config['training']['early_stopping_patience']
+
+=======
+>>>>>>> 3f0bfc8f0f27a56fbe806a6e846218fe636c0170
     os.makedirs(os.path.dirname(save_model_path), exist_ok=True)
 
     optimizer = AdamW(model.parameters(), lr=lr)
     scheduler = CosineAnnealingLR(optimizer, T_max=len(train_loader) * num_epochs)
+<<<<<<< HEAD
+
+    if config['training']['loss'] == 'triplet':
+        loss_func = TripletMarginWithDistanceLoss(
+            distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
+            margin=margin
+        )
+    elif config['training']['loss'] == 'combined':
+        loss_func = CombinedLoss(temperature=temperature, triplet_margin=margin)
+=======
     loss_func = TripletMarginWithDistanceLoss(
         distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
         margin=margin
     )
     # loss_func = CombinedLoss(triplet_margin=margin)
+>>>>>>> 3f0bfc8f0f27a56fbe806a6e846218fe636c0170
 
-    wandb.init(project='clip-triplet-training', config={
+    wandb.init(project=config['wandb']['project'], config={
         'learning_rate': lr,
         'epochs': num_epochs,
         'batch_size': train_loader.batch_size,
         'margin': margin,
     })
+
+    best_val_loss = float('inf')
+    epochs_without_improvement = 0
 
     for epoch in range(num_epochs):
         model.train()
@@ -112,6 +139,17 @@ def train_clip_with_triplet_loss(config):
             print(f'Validation Loss: {val_loss}')
             wandb.log({'val_loss': val_loss})
 
-        torch.save(model.state_dict(), save_model_path)
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                torch.save(model.state_dict(), save_model_path)
+                print(f'Best model saved with validation loss: {best_val_loss}')
+                epochs_without_improvement = 0
+            else:
+                epochs_without_improvement += 1
+                print(f'No improvement for {epochs_without_improvement} epochs')
+
+            if epochs_without_improvement >= early_stopping_patience:
+                print(f'Early stopping triggered after {epoch + 1} epochs')
+                break
 
     wandb.finish()
