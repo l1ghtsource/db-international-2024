@@ -105,7 +105,7 @@ streamlit run service/streamlit_app.py
 │
 │
 ├── service/                       # Различные скрипты сервиса
-│   ├── background_ignoring.py     # Скрипт для работы со скриншотами и коллажами (выделение из них фото)
+│   ├── background_ignoring.py     # Скрипт для работы со скриншотами и коллажами
 │   ├── faiss_create_index.py      # Скрипт для создания и сохранения индекса FAISS
 │   ├── get_mapping.py             # Файл с маппингом названий и номеров классов
 │   └── streamlit_app.py           # Основной Streamlit сервис
