@@ -83,6 +83,7 @@ streamlit run service/streamlit_app.py
 
 ## Структура проекта
 
+```
 .
 ├── .streamlit/                    # Конфигурационные файлы Streamlit
 │   ├── config.toml                # Настройки сервера и стилей
@@ -119,3 +120,4 @@ streamlit run service/streamlit_app.py
 │
 ├── README.md                      # Документация к проекту           
 └── requirements.txt               # Зависимости Python библиотек
+```
