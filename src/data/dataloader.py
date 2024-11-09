@@ -2,7 +2,7 @@ from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 from typing import Tuple, Optional, Callable
 import torch
-from dataset import RKNDataset
+from .dataset import RKNDataset
 
 
 def get_rkn_dataloader(

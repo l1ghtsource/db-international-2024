@@ -28,9 +28,12 @@ def train_clip_with_triplet_loss(config):
     '''
 
     resize_transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-    ])
+    transforms.Resize((224, 224)),              
+    transforms.RandomHorizontalFlip(p=0.5),      
+    transforms.ColorJitter(brightness=0.2,       
+                           contrast=0.2),        
+    transforms.ToTensor(),                      
+])
 
     train_loader, val_loader = get_rkn_dataloader(
         root_dir=config['data']['base_path'],
@@ -43,15 +46,18 @@ def train_clip_with_triplet_loss(config):
     device = config['training']['device']
     model.to(device)
 
-    lr = config['training']['learning_rate']
+    lr = float(config['training']['learning_rate'])
     num_epochs = config['training']['num_epochs']
     margin = config['loss']['margin']
     save_model_path = config['training']['save_model_path']
 
     optimizer = AdamW(model.parameters(), lr=lr)
     scheduler = CosineAnnealingLR(optimizer, T_max=len(train_loader) * num_epochs)
-
-    loss_func = CombinedLoss(triplet_margin=margin)
+    loss_func = TripletMarginWithDistanceLoss(
+        distance_function=lambda x, y: 1.0 - F.cosine_similarity(x, y),
+        margin=margin
+    )
+    # loss_func = CombinedLoss(triplet_margin=margin)
 
     wandb.init(project='clip-triplet-training', config={
         'learning_rate': lr,
