@@ -33,7 +33,7 @@ def main():
         os.environ['WANDB_API_KEY'] = args.wandb_key
 
     if args.save_model_path:
-        config['data']['save_model_path'] = args.save_model_path
+        config['training']['save_model_path'] = args.save_model_path
 
     if args.mode == 'train':
         train_clip_with_triplet_loss(config)

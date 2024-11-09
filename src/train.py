@@ -3,6 +3,7 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from tqdm import tqdm
 import wandb
+import os
 from torchvision import transforms
 from torch.nn import TripletMarginWithDistanceLoss
 import torch.nn.functional as F
@@ -50,6 +51,7 @@ def train_clip_with_triplet_loss(config):
     num_epochs = config['training']['num_epochs']
     margin = config['loss']['margin']
     save_model_path = config['training']['save_model_path']
+    os.makedirs(os.path.dirname(save_model_path), exist_ok=True)
 
     optimizer = AdamW(model.parameters(), lr=lr)
     scheduler = CosineAnnealingLR(optimizer, T_max=len(train_loader) * num_epochs)
