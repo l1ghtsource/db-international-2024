@@ -179,7 +179,7 @@ if uploaded_file is not None and is_screenshot:
         
         with right_column:
             st.subheader('Найденные изображения')
-            similar_images, class_names = get_similar_images_yolo(Image.fromarray(np.uint8(warped_img)), n=20)  # get_similar_images(Image.fromarray(np.uint8(warped_img)), n=20)
+            similar_images, class_names = get_similar_images(Image.fromarray(np.uint8(warped_img)), n=20)  # get_similar_images_yolo(Image.fromarray(np.uint8(warped_img)), n=20)
             
             with st.container():
                 columns = st.columns(4)
@@ -195,7 +195,7 @@ if uploaded_file is not None and is_screenshot:
         st.markdown("---")
 elif uploaded_file is not None:
     original_image = Image.open(uploaded_file)
-    similar_images, class_names = get_similar_images_yolo(original_image, n=20)  # get_similar_images(original_image, n=20)
+    similar_images, class_names = get_similar_images(original_image, n=20)  # get_similar_images_yolo(original_image, n=20)
 
     draw_bboxes = st.checkbox("Показывать bounding boxes")
     left_column, right_column = st.columns([1, 2], gap='large')
