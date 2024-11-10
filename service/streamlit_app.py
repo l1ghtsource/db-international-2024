@@ -55,8 +55,8 @@ def find_similar_images_clip(model, faiss_index, image_paths, query_image, top_k
 def get_similar_images(
     uploaded_image, 
     mode='clip_trained', 
-    weights='logs/clip_w_triplet_v2.pth', 
-    index='faiss/clip_trained_ver2_triplet_loss', 
+    weights='logs/clip_w_combined_v1.pth', 
+    index='faiss/clip_trained_ver1_combined_loss', 
     n=20
 ):
     query_image = uploaded_image  # directly from the upload
