@@ -56,29 +56,6 @@ def main():
         if args.checkpoint is None:
             raise ValueError('Checkpoint path is required for inference mode')
         
-        # потом сделать с конфига подтягивание всего (путь к дате, веса, режим, индекс, юз классов)
-        print('YOLO w/ classes')
-        inference_yolo(
-            image_folder='images', 
-            model=YOLO('yolov8x-oiv7.pt'),
-            output_csv='submission_yolo_use_classes.csv', 
-            index='faiss/yolo_index', 
-            n=10, 
-            use_classes=True
-        )
-    
-        print('Triplet CLIP w/ classes')
-        inference(
-            image_folder='images', 
-            output_csv='submission_triplet_ver2_use_classes.csv', 
-            mode='clip_trained', 
-            weights='logs/clip_w_triplet_v2.pth', 
-            index='faiss/clip_trained_ver2_triplet_loss', 
-            n=10,
-            use_classes=True
-        )
-
-        print('Combined CLIP w/ classes')
         inference(
             image_folder='images', 
             output_csv='submission_combined_ver1_use_classes.csv', 
@@ -87,38 +64,6 @@ def main():
             index='faiss/clip_trained_ver1_combined_loss', 
             n=10,
             use_classes=True
-        )
-        
-        print('YOLO w/o classes')
-        inference_yolo(
-            image_folder='images', 
-            model=YOLO('yolov8x-oiv7.pt'),
-            output_csv='submission_yolo_no_classes.csv', 
-            index='faiss/yolo_index', 
-            n=10, 
-            use_classes=False
-        )
-
-        print('Triplet CLIP w/o classes')
-        inference(
-            image_folder='images', 
-            output_csv='submission_triplet_ver2_no_classes.csv', 
-            mode='clip_trained', 
-            weights='logs/clip_w_triplet_v2.pth', 
-            index='faiss/clip_trained_ver2_triplet_loss', 
-            n=10,
-            use_classes=False
-        )
-
-        print('Combined CLIP w/o classes')
-        inference(
-            image_folder='images', 
-            output_csv='submission_combined_ver1_no_classes.csv', 
-            mode='clip_trained', 
-            weights='logs/clip_model.pth', 
-            index='faiss/clip_trained_ver1_combined_loss', 
-            n=10,
-            use_classes=False
         )
 
 
