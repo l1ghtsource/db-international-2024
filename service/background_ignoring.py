@@ -29,8 +29,9 @@ def preprocess_the_image(input_image: np.array | Tuple[np.array]) -> np.array | 
 def find_image_contours(
     input_image: np.array | Tuple[np.array], 
     epsilon_factor: float = 0.02, 
-    min_area: int = 30000
-    ) -> Tuple[np.array | Tuple[np.array], Tuple[List[np.array]]]:
+    min_area: int = 30000,
+    max_aspect_ratio: float = 10.0
+) -> Tuple[np.array | Tuple[np.array], Tuple[List[np.array]]]:
     '''
     Find big contours on the image. They are highly likely objects of interest
 
@@ -38,6 +39,7 @@ def find_image_contours(
         input_image (np.array | Tuple[np.array]): A single preprocessed image or a batch of images
         epsilon_factor (float, optional): Epsilon factor to approximates a contour shape. Defaults to 0.04.
         min_area (int, optional): Min detected area. Defaults to 5000.
+        max_aspect_ratio (float, optional): Maximum allowed aspect ratio (longest side / shortest side) for contours.
 
     Returns:
         Tuple[np.array | Tuple[np.array], Tuple[List[np.array]]]: a tuple where: 
@@ -45,7 +47,7 @@ def find_image_contours(
             - The second component is a Tuple of contours detected for each images
     '''
 
-    def _find_contours_single_image(image_processed, original_image, epsilon_factor, min_area):
+    def _find_contours_single_image(image_processed, original_image, epsilon_factor, min_area, max_aspect_ratio):
         contours, _ = cv2.findContours(image_processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         rectangular_contours = []
 
@@ -56,8 +58,13 @@ def find_image_contours(
             if len(approx) != 4:
                 continue 
             
-            if cv2.contourArea(contour) >=  min_area:
-                rectangular_contours.append(contour)
+            if cv2.contourArea(contour) >= min_area:
+                x, y, w, h = cv2.boundingRect(contour)
+                aspect_ratio = max(w, h) / min(w, h)
+                
+                # if aspect_ratio <= max_aspect_ratio - skip
+                if aspect_ratio <= max_aspect_ratio:
+                    rectangular_contours.append(contour)
 
         contour_image = original_image.copy()
         cv2.drawContours(contour_image, rectangular_contours, -1, (0, 255, 255), 5)  # draw in green color
@@ -66,13 +73,13 @@ def find_image_contours(
 
     if not isinstance(input_image, tuple | list):
         processed_image = preprocess_the_image(input_image.copy())
-        return _find_contours_single_image(processed_image, input_image, epsilon_factor, min_area)
+        return _find_contours_single_image(processed_image, input_image, epsilon_factor, min_area, max_aspect_ratio)
     
     contour_image_list, contour_coordinates_list = [], []
 
     for image in input_image:
         processed_image = preprocess_the_image(image)
-        contour_image, contours_detected = _find_contours_single_image(processed_image, image, epsilon_factor, min_area)
+        contour_image, contours_detected = _find_contours_single_image(processed_image, image, epsilon_factor, min_area, max_aspect_ratio)
         contour_image_list.append(contour_image)
         contour_coordinates_list.append(contours_detected)
 
