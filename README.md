@@ -7,7 +7,7 @@ Team Members:
 2) **Александр Груздев** - ML Engineer
 3) **Кирилл Рыжичкин** - ML Engineer
 
-Презентация: [тык]([google.com](https://drive.google.com/file/d/1OQ1lgBbncG3nPM6R9ctwXG3eltUROjOj/view?usp=sharing))
+Презентация: [тык](https://drive.google.com/file/d/1zOz4nsKbn5RV8hAvh9ah2qv7O2Vfx8ef/view?usp=sharing)
 
 Веб-сервис: [тык](http://fotorientir.itatmisis.ru:8501/)
 
