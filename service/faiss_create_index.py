@@ -161,3 +161,4 @@ def save_index_yolo(index='./faiss/yolo_index'):
 # save_index_clip(trained=True, weights='logs/clip_w_triplet_v2.pth', index='./faiss/clip_trained_ver2_triplet_loss')  
 # save_index_clip(trained=True, weights='logs/clip_model.pth', index='./faiss/clip_trained_ver1_combined_loss')  
 # save_index_yolo(index='./faiss/yolo_index')
+# save_index_clip(trained=True, weights='logs/clip_triplet_tuned.pth', index='./faiss/clip_trained_ver3_triplet_loss')  

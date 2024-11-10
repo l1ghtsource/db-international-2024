@@ -32,9 +32,7 @@ Team Members:
 ### Модели:
 1) CLIP (`openai/clip-vit-base-patch32`), дообученный на кастомном лоссе (основное решение):
 
-$$
-\text{CombinedLoss} = 0.5 \cdot \text{TripletMarginLossWithDistance} + 0.5 \cdot \text{InfoNCE}
-$$
+<img src="https://latex.codecogs.com/svg.latex?\text{CombinedLoss} = 0.5 \cdot \text{TripletMarginLossWithDistance} + 0.5 \cdot \text{InfoNCE}" />
 
 Подробнее про InfoNCE: [Papers with Code](https://paperswithcode.com/method/infonce)
 
@@ -120,13 +118,13 @@ streamlit run service/streamlit_app.py
 │   │   ├── cross_attn_model.py    # Архитектура Cross-attention модели
 │   │   └── modules.py             # Реализация Cross-attention, а также функций потерь
 │   │
-│   └── utils/                     # Вспомогательные скрипты
-│       ├── config.py              # Скрипт для загрузки конфигов
-│       └── metrics.py             # Скрипт рассчета метрик ранжирования
-│     
-│── inference.py                   # Скрипт инференса моделей и генерации сабмита
-│── train.py                       # Скрипт обучения моделей
-│── main.py                        # Скрипт для запуска обучения/инференса с argparser
+│   ├── utils/                     # Вспомогательные скрипты
+│   │   ├── config.py              # Скрипт для загрузки конфигов
+│   │   └── metrics.py             # Скрипт рассчета метрик ранжирования
+│   │  
+│   ├── inference.py               # Скрипт инференса моделей и генерации сабмита
+│   ├── train.py                   # Скрипт обучения моделей
+│   └── main.py                    # Скрипт для запуска обучения/инференса с argparser
 │
 ├── README.md                      # Документация к проекту           
 └── requirements.txt               # Зависимости Python библиотек

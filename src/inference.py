@@ -139,10 +139,10 @@ def inference(
         )
 
         # extract the image name without extension
-        image_name = os.path.splitext(image_file)[0]
+        image_name = image_file
 
         # get the list of recommended image names without extensions
-        recommended_images = [os.path.splitext(os.path.basename(img))[0] for img in similar_images]
+        recommended_images = [os.path.basename(img) for img in similar_images]
 
         # join the recommended images with commas
         recs = ','.join(recommended_images)
@@ -157,21 +157,21 @@ def inference(
     print(f"Submission CSV saved to {output_csv}")
     
 def find_similar_images_yolo(model, faiss_index, image_paths, query_image, top_k=50, use_classes=True):
-    # Prepare the image for YOLO model
+    # prepare the image for YOLO model
     image = Image.open(query_image).convert('RGB')
 
-    # Get the embedding from the YOLO model
+    # get the embedding from the YOLO model
     embedding = model.embed(query_image)[0].cpu().numpy()
     embedding = embedding / np.linalg.norm(embedding)  # normalize the feature vector
     embedding = embedding.reshape(1, -1).astype("float32")
     
-    # Search in the Faiss index
+    # search in the Faiss index
     distances, indices = faiss_index.search(embedding, top_k)
     
-    # Return the similar images with their paths
+    # return the similar images with their paths
     similar_images = [image_paths[i] for i in indices[0]]
     
-    # Extract class names (parent folder of each image)
+    # extract class names (parent folder of each image)
     class_names = [image_path.split('/')[-2] for image_path in similar_images]
     
     if use_classes:
@@ -189,13 +189,13 @@ def get_similar_images_yolo(
 ):
     query_image = uploaded_image  # directly from the upload
 
-    # Load the Faiss index for YOLO
+    # load the Faiss index for YOLO
     faiss_index = read_index(f'{index}.index')
 
     with open(f'{index}.pkl', 'rb') as f:
         image_paths = pickle.load(f)
 
-    # Find top 5n similar images
+    # find top 5n similar images
     similar_images, class_names, distances = find_similar_images_yolo(
         model, 
         faiss_index, 
@@ -206,11 +206,11 @@ def get_similar_images_yolo(
     )
     
     if use_classes:
-        # Determine the dominant class in the top 50
+        # determine the dominant class in the top 50
         class_counts = {cls: class_names.count(cls) for cls in set(class_names)}
         dominant_class = max(class_counts, key=class_counts.get)
         
-        # Now collect only the images from the dominant class
+        # now collect only the images from the dominant class
         dominant_images = []
         dominant_classes = []
         for img, cls in zip(similar_images, class_names):
@@ -220,7 +220,7 @@ def get_similar_images_yolo(
             if len(dominant_images) == n:
                 break
 
-        # If we don't have enough images from the dominant class, fill up with other images from the same class
+        # if we don't have enough images from the dominant class, fill up with other images from the same class
         if len(dominant_images) < n:
             for img, cls in zip(similar_images[len(dominant_images):], class_names[len(dominant_images):]):
                 if cls == dominant_class:
@@ -229,10 +229,10 @@ def get_similar_images_yolo(
                 if len(dominant_images) == n:
                     break
         
-        # Now we have the final dominant class images
+        # now we have the final dominant class images
         return dominant_images, dominant_classes
     else:
-        # Return top n images without considering classes
+        # return top n images without considering classes
         return similar_images[:n], None
 
 
@@ -244,17 +244,17 @@ def inference_yolo(
     n=10, 
     use_classes=True
 ):
-    # List all image files in the given folder
+    # list of all image files in the given folder
     image_files = [f for f in os.listdir(image_folder) if f.lower().endswith(('jpg', 'jpeg', 'png'))]
 
-    # Prepare the list to store results
+    # prepare the list to store results
     results = []
 
-    # Wrap the loop with tqdm for progress tracking
+    # wWrap the loop with tqdm for progress tracking
     for image_file in tqdm(image_files, desc="Processing images", ncols=100):
         image_path = os.path.join(image_folder, image_file)
 
-        # Find similar images for the current image
+        # find similar images for the current image
         similar_images, class_names = get_similar_images_yolo(
             uploaded_image=image_path, 
             model=model, 
@@ -263,34 +263,34 @@ def inference_yolo(
             use_classes=use_classes
         )
 
-        # Extract the image name without extension
-        image_name = os.path.splitext(image_file)[0]
+        # extract the image name without extension
+        image_name = image_file
 
-        # Get the list of recommended image names without extensions
-        recommended_images = [os.path.splitext(os.path.basename(img))[0] for img in similar_images]
-
-        # Join the recommended images with commas
+        # get the list of recommended image names without extensions
+        recommended_images = [os.path.basename(img) for img in similar_images]
+        
+        # join the recommended images with commas
         recs = ','.join(recommended_images)
 
-        # Append the result
+        # append the result
         results.append({'image': image_name, 'recs': f'{recs}'})
 
-    # Create a DataFrame and save it to a CSV file
+    # create a DataFrame and save it to a CSV file
     df = pd.DataFrame(results)
     df.to_csv(output_csv, index=False)
 
     print(f"Submission CSV saved to {output_csv}")
     
-    
-# inference_yolo(
+# inference(
 #     image_folder='images', 
-#     model=YOLO('yolov8x-oiv7.pt'),
-#     output_csv='submission_yolo_use_classes.csv', 
-#     index='faiss/yolo_index', 
-#     n=10, 
+#     output_csv='submission_combined_ver1_use_classes.csv', 
+#     mode='clip_trained', 
+#     weights='logs/clip_model.pth', 
+#     index='faiss/clip_trained_ver1_combined_loss', 
+#     n=10,
 #     use_classes=True
 # )
-    
+  
 # inference(
 #     image_folder='images', 
 #     output_csv='submission_triplet_ver2_use_classes.csv', 
@@ -301,22 +301,22 @@ def inference_yolo(
 #     use_classes=True
 # )
 
+# inference_yolo(
+#     image_folder='images', 
+#     model=YOLO('yolov8x-oiv7.pt'),
+#     output_csv='submission_yolo_use_classes.csv', 
+#     index='faiss/yolo_index', 
+#     n=10, 
+#     use_classes=True
+# )
+
 # inference(
 #     image_folder='images', 
-#     output_csv='submission_combined_ver1_use_classes.csv', 
+#     output_csv='submission_combined_ver1_no_classes.csv', 
 #     mode='clip_trained', 
 #     weights='logs/clip_model.pth', 
 #     index='faiss/clip_trained_ver1_combined_loss', 
 #     n=10,
-#     use_classes=True
-# )
-
-# inference_yolo(
-#     image_folder='images', 
-#     model=YOLO('yolov8x-oiv7.pt'),
-#     output_csv='submission_yolo_no_classes.csv', 
-#     index='faiss/yolo_index', 
-#     n=10, 
 #     use_classes=False
 # )
 
@@ -330,12 +330,11 @@ def inference_yolo(
 #     use_classes=False
 # )
 
-# inference(
+# inference_yolo(
 #     image_folder='images', 
-#     output_csv='submission_combined_ver1_no_classes.csv', 
-#     mode='clip_trained', 
-#     weights='logs/clip_model.pth', 
-#     index='faiss/clip_trained_ver1_combined_loss', 
-#     n=10,
+#     model=YOLO('yolov8x-oiv7.pt'),
+#     output_csv='submission_yolo_no_classes.csv', 
+#     index='faiss/yolo_index', 
+#     n=10, 
 #     use_classes=False
 # )
