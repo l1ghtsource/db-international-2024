@@ -155,6 +155,79 @@ def save_index_yolo(index='./faiss/yolo_index'):
     write_index(faiss_index_yolo, f'{index}.index')  # save the FAISS index
     with open(f'{index}.pkl', 'wb') as f:
         pickle.dump(image_paths_yolo, f)  # save the image paths
+     
+        
+def load_and_vectorize_images_combined(clip_model, yolo_model, dataset_path):
+    clip_processor = CLIPProcessor.from_pretrained('openai/clip-vit-base-patch32')
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
+    clip_model = clip_model.to(device)
+    clip_model.eval()
+    
+    embeddings_combined = []
+    image_paths_combined = []
+    
+    for class_ in tqdm(os.listdir(dataset_path)):
+        class_path = os.path.join(dataset_path, class_)
+        if not os.path.isdir(class_path):
+            continue
+        
+        for file in os.listdir(class_path):
+            image_path = os.path.join(class_path, file)
+            try:
+                # process image with CLIP
+                image = Image.open(image_path).convert('RGB')
+                clip_inputs = clip_processor(images=image, return_tensors='pt')
+                clip_inputs = {k: v.to(device) for k, v in clip_inputs.items()}
+                
+                with torch.no_grad():
+                    clip_emb = clip_model.get_image_features(**clip_inputs).cpu().numpy()[0]
+                
+                # process image with YOLO
+                yolo_emb = yolo_model.embed(image_path)[0].cpu().numpy()
+                
+                # concatenate embeddings and normalize
+                combined_emb = np.concatenate((clip_emb, yolo_emb))
+                combined_emb = combined_emb / np.linalg.norm(combined_emb)
+                
+                # append to lists
+                embeddings_combined.append(combined_emb)
+                image_paths_combined.append(image_path)
+                
+            except Exception as e:
+                print(f'Error processing {image_path}: {e}')
+    
+    return embeddings_combined, image_paths_combined
+
+
+def create_faiss_index_combined(embeddings_combined, dimension):
+    embeddings_array = np.array(embeddings_combined).astype('float32')
+    index = faiss.IndexFlatL2(dimension)
+    index.add(embeddings_array)
+    return index
+
+
+def save_index_combined(clip_weights='logs/clip_w_triplet_v2.pth', yolo_weights='yolov8x-oiv7.pt', index_path='./faiss/combined_index'):
+    # load models
+    clip_model = CLIPModel.from_pretrained('openai/clip-vit-base-patch32')
+    checkpoint = torch.load(clip_weights)
+    clip_model.load_state_dict(checkpoint)
+    yolo_model = YOLO(yolo_weights)
+    
+    # dataset path
+    dataset_path = '../data/train_data_rkn/dataset'
+    
+    # vectorize images
+    combined_embs, combined_image_paths = load_and_vectorize_images_combined(clip_model, yolo_model, dataset_path)
+    
+    # create FAISS index
+    dimension = combined_embs[0].shape[0]
+    faiss_index_combined = create_faiss_index_combined(combined_embs, dimension)
+    
+    # save FAISS index and image paths
+    write_index(faiss_index_combined, f'{index_path}.index')
+    with open(f'{index_path}.pkl', 'wb') as f:
+        pickle.dump(combined_image_paths, f)
 
 
 # it was already saved
@@ -162,3 +235,8 @@ def save_index_yolo(index='./faiss/yolo_index'):
 # save_index_clip(trained=True, weights='logs/clip_model.pth', index='./faiss/clip_trained_ver1_combined_loss')  
 # save_index_yolo(index='./faiss/yolo_index')
 # save_index_clip(trained=True, weights='logs/clip_triplet_tuned.pth', index='./faiss/clip_trained_ver3_triplet_loss')  
+# save_index_combined(
+#     clip_weights='logs/clip_model.pth',
+#     yolo_weights='yolov8x-oiv7.pt', 
+#     index_path='./faiss/combined_index'
+# )
