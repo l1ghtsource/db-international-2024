@@ -32,7 +32,7 @@ Team Members:
 ### Модели:
 1) CLIP (`openai/clip-vit-base-patch32`), дообученный на кастомном лоссе (основное решение):
 
-<img src="https://latex.codecogs.com/svg.latex?\text{CombinedLoss} = 0.5 \cdot \text{TripletMarginLossWithDistance} + 0.5 \cdot \text{InfoNCE}" />
+<img src="https://latex.codecogs.com/gif.latex?O_t=\text{CombinedLoss} = 0.5 \cdot \text{TripletMarginLossWithDistance} + 0.5 \cdot \text{InfoNCE}" /> 
 
 Подробнее про InfoNCE: [Papers with Code](https://paperswithcode.com/method/infonce)
 
