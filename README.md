@@ -96,7 +96,7 @@ streamlit run service/streamlit_app.py
 ```
 .
 ├── .streamlit/                    # Конфигурационные файлы Streamlit
-│   ├── config.toml                # Настройки сервера и стилей
+│   └── config.toml                # Настройки сервера и стилей
 │
 ├── configs/                       # Конфигурационные файлы для моделей
 │   ├── clip.yaml                  # Конфиг для CLIP 
