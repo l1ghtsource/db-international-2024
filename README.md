@@ -75,7 +75,7 @@ cd db_international_2024
 ```bash
 source environments/hack/bin/activate
 ```
-3) Устанавливаем необходиимые зависимости
+3) Устанавливаем необходимые зависимости
 ```bash
 pip install -r requirements.txt
 ```
