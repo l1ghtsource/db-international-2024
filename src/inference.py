@@ -281,6 +281,130 @@ def inference_yolo(
 
     print(f"Submission CSV saved to {output_csv}")
     
+    
+def find_similar_images_combined(
+    clip_weights, yolo_model, faiss_index, image_paths, query_image, top_k=50, use_classes=True
+):
+    # initialize CLIP and YOLO processors
+    clip_model = CLIPModel.from_pretrained('openai/clip-vit-base-patch32')
+    checkpoint = torch.load(clip_weights)
+    clip_model.load_state_dict(checkpoint)
+    
+    processor = CLIPProcessor.from_pretrained('openai/clip-vit-base-patch32')
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    # move models to the appropriate device
+    clip_model.to(device)
+    
+    # process the image for CLIP
+    clip_inputs = processor(images=query_image, return_tensors="pt")
+    clip_inputs = {k: v.to(device) for k, v in clip_inputs.items()}
+    with torch.no_grad():
+        clip_embedding = clip_model.get_image_features(**clip_inputs).cpu().numpy()[0]
+    
+    # get YOLO embedding
+    yolo_embedding = yolo_model.embed(query_image)[0].cpu().numpy()
+    
+    # concatenate and normalize
+    query_embedding = np.concatenate((clip_embedding, yolo_embedding))
+    query_embedding = query_embedding / np.linalg.norm(query_embedding)
+    query_embedding = query_embedding.reshape(1, -1).astype("float32")
+    
+    # search in the Faiss index
+    distances, indices = faiss_index.search(query_embedding, top_k)
+    
+    # return paths to similar images and their classes
+    similar_images = [image_paths[i] for i in indices[0]]
+    class_names = [image_path.split('/')[-2] for image_path in similar_images]
+    
+    if use_classes:
+        return similar_images, class_names, distances
+    else:
+        return similar_images, None, distances
+
+
+def get_similar_images_combined(
+    uploaded_image, clip_weights, yolo_model, index='faiss/combined_index', n=10, use_classes=True
+):
+    # load the Faiss index and image paths
+    faiss_index = read_index(f'{index}.index')
+    with open(f'{index}.pkl', 'rb') as f:
+        image_paths = pickle.load(f)
+
+    # find the top-5*n similar images to analyze the dominant class
+    similar_images, class_names, distances = find_similar_images_combined(
+        clip_weights, yolo_model, faiss_index, image_paths, uploaded_image, top_k=5 * n, use_classes=use_classes
+    )
+    
+    if use_classes:
+        # determine the dominant class in the results
+        class_counts = {cls: class_names.count(cls) for cls in set(class_names)}
+        dominant_class = max(class_counts, key=class_counts.get)
+        
+        # build a list of images from the dominant class
+        dominant_images, dominant_classes = [], []
+        for img, cls in zip(similar_images, class_names):
+            if cls == dominant_class:
+                dominant_images.append(img)
+                dominant_classes.append(cls)
+            if len(dominant_images) == n:
+                break
+        
+        # if there are not enough images, add the remaining ones from the dominant class
+        if len(dominant_images) < n:
+            for img, cls in zip(similar_images[len(dominant_images):], class_names[len(dominant_images):]):
+                if cls == dominant_class:
+                    dominant_images.append(img)
+                    dominant_classes.append(cls)
+                if len(dominant_images) == n:
+                    break
+        
+        return dominant_images, dominant_classes
+    else:
+        # if classes are not considered, return the top-n images
+        return similar_images[:n], None
+
+
+def inference_combined(
+    image_folder, clip_weights, yolo_model, output_csv='submission_combined.csv', index='faiss/combined_index', 
+    n=10, use_classes=True
+):
+    # load all images from the specified folder
+    image_files = [f for f in os.listdir(image_folder) if f.lower().endswith(('jpg', 'jpeg', 'png'))]
+
+    results = []
+    for image_file in tqdm(image_files, desc="Processing images", ncols=100):
+        image_path = os.path.join(image_folder, image_file)
+        uploaded_image = Image.open(image_path)
+
+        # find similar images
+        similar_images, class_names = get_similar_images_combined(
+            uploaded_image=uploaded_image, clip_weights=clip_weights, yolo_model=yolo_model, 
+            index=index, n=n, use_classes=use_classes
+        )
+
+        # format the results
+        image_name = image_file
+        recommended_images = [os.path.basename(img) for img in similar_images]
+        recs = ','.join(recommended_images)
+        results.append({'image': image_name, 'recs': f'{recs}'})
+
+    # save the results to CSV
+    df = pd.DataFrame(results)
+    df.to_csv(output_csv, index=False)
+    print(f"Submission CSV saved to {output_csv}")
+
+
+# inference_combined(
+#     image_folder='images', 
+#     clip_weights='logs/clip_model.pth', 
+#     yolo_model=YOLO('yolov8x-oiv7.pt'), 
+#     output_csv='submission_concat.csv', 
+#     index='faiss/combined_index', 
+#     n=10, 
+#     use_classes=True
+# )
+    
 # inference(
 #     image_folder='images', 
 #     output_csv='submission_combined_ver1_use_classes.csv', 
